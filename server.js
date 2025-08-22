@@ -1,3 +1,4 @@
+import cors from "cors";
 const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
@@ -11,8 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 5002;
 
 // Middleware
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "https://rbshstudio.com",
+  "https://www.rbshstudio.com"
+];
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'https://rbshstudio.com',
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true); // allow request
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 app.use(express.json({ limit: '10mb' }));
