@@ -5,10 +5,14 @@ const dotenv = require('dotenv');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 
+const adminRoutes = require('./routes/admin');
+
 // Load environment variables
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(cookieParser());
 const PORT = process.env.PORT || 5002;
 
 // Middleware
@@ -68,10 +72,11 @@ const createDefaultAdmin = async () => {
 };
 
 // Routes
+app.use('/api/admin', adminRoutes);
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/applications', require('./routes/applications'));
 app.use('/api/contact', require('./routes/contact'));
-app.use('/api/admin', require('./routes/admin'));
+
 app.use('/api/auth', require('./routes/auth'));
 
 // Health check endpoint
@@ -143,3 +148,8 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+
+
+
+
