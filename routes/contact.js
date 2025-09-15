@@ -18,6 +18,60 @@ const createTransporter = () => {
   });
 };
 
+// GET /api/contact - Get all contact submissions (public endpoint)
+router.get('/', async (req, res) => {
+  try {
+    const {
+      status,
+      priority,
+      assignedTo,
+      page = 1,
+      limit = 10,
+      sort = '-createdAt'
+    } = req.query;
+
+    // Build filter object
+    const filter = {};
+    if (status && status !== 'all') filter.status = status;
+    if (priority && priority !== 'all') filter.priority = priority;
+    if (assignedTo && assignedTo !== 'all') filter.assignedTo = assignedTo;
+
+    // Calculate pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get contacts with pagination (excluding sensitive info)
+    const contacts = await Contact.find(filter)
+      .select('-email -number -notes -assignedTo -followUpDate') // Exclude sensitive data
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    // Get total count for pagination
+    const total = await Contact.countDocuments(filter);
+
+    // Add id field for frontend compatibility
+    const contactsWithId = contacts.map(contact => ({
+      ...contact,
+      id: contact._id.toString()
+    }));
+
+    res.json({
+      contacts: contactsWithId,
+      pagination: {
+        current: parseInt(page),
+        pages: Math.ceil(total / parseInt(limit)),
+        total,
+        hasNext: skip + contacts.length < total,
+        hasPrev: parseInt(page) > 1
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching contacts:', error);
+    res.status(500).json({ error: 'Failed to fetch contacts' });
+  }
+});
+
 // GET /api/contact/admin - Get all contact submissions (admin only)
 router.get('/admin', auth, async (req, res) => {
   try {
@@ -39,7 +93,7 @@ router.get('/admin', auth, async (req, res) => {
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Get contacts with pagination
+    // Get contacts with pagination (full data for admin)
     const contacts = await Contact.find(filter)
       .sort(sort)
       .skip(skip)
@@ -148,19 +202,6 @@ router.get('/admin/:id', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid contact ID' });
     }
     res.status(500).json({ error: 'Failed to fetch contact' });
-  }
-});
-
-// GET /api/contact - Public endpoint (returns basic info or empty response)
-router.get('/', async (req, res) => {
-  try {
-    // Return basic contact info or just success status
-    res.json({
-      message: 'Contact API is working',
-      status: 'active'
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Contact service unavailable' });
   }
 });
 

@@ -162,21 +162,8 @@ router.put('/admin/:id', auth, async (req, res) => {
   }
 });
 
-// GET /api/applications - Public endpoint (returns basic info)
+// GET /api/applications - Get all applications (public endpoint)
 router.get('/', async (req, res) => {
-  try {
-    // Return basic applications info or just success status
-    res.json({ 
-      message: 'Applications API is working',
-      status: 'active'
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Applications service unavailable' });
-  }
-});
-
-// GET /api/applications/admin - Get all applications (admin only) - legacy endpoint
-router.get('/admin-legacy', auth, async (req, res) => {
   try {
     const { 
       jobId, 
@@ -194,9 +181,10 @@ router.get('/admin-legacy', auth, async (req, res) => {
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
-    // Get applications with job details
+    // Get applications with job details (excluding sensitive info)
     const applications = await Application.find(filter)
       .populate('jobId', 'title department location')
+      .select('-email -phone -resume -coverLetter -notes -reviewedBy') // Exclude sensitive data
       .sort(sort)
       .skip(skip)
       .limit(parseInt(limit))
@@ -205,8 +193,14 @@ router.get('/admin-legacy', auth, async (req, res) => {
     // Get total count for pagination
     const total = await Application.countDocuments(filter);
 
+    // Add id field for frontend compatibility
+    const applicationsWithId = applications.map(app => ({
+      ...app,
+      id: app._id.toString()
+    }));
+
     res.json({
-      applications,
+      applications: applicationsWithId,
       pagination: {
         current: parseInt(page),
         pages: Math.ceil(total / parseInt(limit)),
@@ -271,7 +265,7 @@ router.get('/admin/stats', auth, async (req, res) => {
   }
 });
 
-// GET /api/applications/admin/:id - Get single application (admin only)  
+// GET /api/applications/admin/:id - Get single application (admin only)
 router.get('/admin/:id', auth, async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
