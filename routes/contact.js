@@ -21,11 +21,11 @@ const createTransporter = () => {
 // GET /api/contact/admin - Get all contact submissions (admin only)
 router.get('/admin', auth, async (req, res) => {
   try {
-    const { 
-      status, 
+    const {
+      status,
       priority,
       assignedTo,
-      page = 1, 
+      page = 1,
       limit = 10,
       sort = '-createdAt'
     } = req.query;
@@ -136,7 +136,7 @@ router.get('/admin/stats', auth, async (req, res) => {
 router.get('/admin/:id', auth, async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id).lean();
-    
+
     if (!contact) {
       return res.status(404).json({ error: 'Contact not found' });
     }
@@ -155,7 +155,7 @@ router.get('/admin/:id', auth, async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     // Return basic contact info or just success status
-    res.json({ 
+    res.json({
       message: 'Contact API is working',
       status: 'active'
     });
@@ -175,8 +175,8 @@ router.post('/', contactValidation, validate, async (req, res) => {
     });
 
     if (existingContact) {
-      return res.status(400).json({ 
-        error: 'You have already submitted a contact form in the last 24 hours. Please wait before submitting again.' 
+      return res.status(400).json({
+        error: 'You have already submitted a contact form in the last 24 hours. Please wait before submitting again.'
       });
     }
 
@@ -187,7 +187,7 @@ router.post('/', contactValidation, validate, async (req, res) => {
     // Send confirmation email to user
     try {
       const transport = createTransport();
-      
+
       const userMailOptions = {
         from: process.env.EMAIL_USER,
         to: contact.email,
@@ -221,7 +221,7 @@ router.post('/', contactValidation, validate, async (req, res) => {
     // Send notification email to admin
     try {
       const transporter = createTransporter();
-      
+
       const adminMailOptions = {
         from: process.env.EMAIL_USER,
         to: process.env.ADMIN_EMAIL,
@@ -261,7 +261,7 @@ router.post('/', contactValidation, validate, async (req, res) => {
   } catch (error) {
     console.error('Error submitting contact form:', error);
     if (error.name === 'ValidationError') {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: 'Validation failed',
         details: Object.values(error.errors).map(err => err.message)
       });
@@ -274,14 +274,14 @@ router.post('/', contactValidation, validate, async (req, res) => {
 router.put('/admin/:id', auth, async (req, res) => {
   try {
     const { status, notes, assignedTo, followUpDate, priority } = req.body;
-    
+
     const validStatuses = ['new', 'contacted', 'in-progress', 'completed', 'closed'];
     const validPriorities = ['low', 'medium', 'high', 'urgent'];
-    
+
     if (status && !validStatuses.includes(status)) {
       return res.status(400).json({ error: 'Invalid status' });
     }
-    
+
     if (priority && !validPriorities.includes(priority)) {
       return res.status(400).json({ error: 'Invalid priority' });
     }
