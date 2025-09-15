@@ -18,8 +18,8 @@ const createTransporter = () => {
   });
 };
 
-// GET /api/contact - Get all contact submissions (admin only)
-router.get('/', auth, async (req, res) => {
+// GET /api/contact/admin - Get all contact submissions (admin only)
+router.get('/admin', auth, async (req, res) => {
   try {
     const { 
       status, 
@@ -65,8 +65,8 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// GET /api/contact/stats - Get contact statistics (admin only)
-router.get('/stats', auth, async (req, res) => {
+// GET /api/contact/admin/stats - Get contact statistics (admin only)
+router.get('/admin/stats', auth, async (req, res) => {
   try {
     const statusStats = await Contact.aggregate([
       {
@@ -132,8 +132,8 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
-// GET /api/contact/:id - Get single contact (admin only)
-router.get('/:id', auth, async (req, res) => {
+// GET /api/contact/admin/:id - Get single contact (admin only)
+router.get('/admin/:id', auth, async (req, res) => {
   try {
     const contact = await Contact.findById(req.params.id).lean();
     
@@ -148,6 +148,19 @@ router.get('/:id', auth, async (req, res) => {
       return res.status(400).json({ error: 'Invalid contact ID' });
     }
     res.status(500).json({ error: 'Failed to fetch contact' });
+  }
+});
+
+// GET /api/contact - Public endpoint (returns basic info or empty response)
+router.get('/', async (req, res) => {
+  try {
+    // Return basic contact info or just success status
+    res.json({ 
+      message: 'Contact API is working',
+      status: 'active'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Contact service unavailable' });
   }
 });
 
@@ -257,8 +270,8 @@ router.post('/', contactValidation, validate, async (req, res) => {
   }
 });
 
-// PUT /api/contact/:id - Update contact (admin only)
-router.put('/:id', auth, async (req, res) => {
+// PUT /api/contact/admin/:id - Update contact (admin only)
+router.put('/admin/:id', auth, async (req, res) => {
   try {
     const { status, notes, assignedTo, followUpDate, priority } = req.body;
     
@@ -303,8 +316,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/contact/:id - Delete contact (admin only)
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /api/contact/admin/:id - Delete contact (admin only)
+router.delete('/admin/:id', auth, async (req, res) => {
   try {
     const contact = await Contact.findByIdAndDelete(req.params.id);
 

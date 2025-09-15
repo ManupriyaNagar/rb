@@ -162,8 +162,21 @@ router.put('/admin/:id', auth, async (req, res) => {
   }
 });
 
-// GET /api/applications - Get all applications (admin only) - legacy endpoint
-router.get('/', auth, async (req, res) => {
+// GET /api/applications - Public endpoint (returns basic info)
+router.get('/', async (req, res) => {
+  try {
+    // Return basic applications info or just success status
+    res.json({ 
+      message: 'Applications API is working',
+      status: 'active'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Applications service unavailable' });
+  }
+});
+
+// GET /api/applications/admin - Get all applications (admin only) - legacy endpoint
+router.get('/admin-legacy', auth, async (req, res) => {
   try {
     const { 
       jobId, 
@@ -208,8 +221,8 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
-// GET /api/applications/stats - Get application statistics (admin only)
-router.get('/stats', auth, async (req, res) => {
+// GET /api/applications/admin/stats - Get application statistics (admin only)
+router.get('/admin/stats', auth, async (req, res) => {
   try {
     const stats = await Application.aggregate([
       {
@@ -258,8 +271,8 @@ router.get('/stats', auth, async (req, res) => {
   }
 });
 
-// GET /api/applications/:id - Get single application (admin only)
-router.get('/:id', auth, async (req, res) => {
+// GET /api/applications/admin/:id - Get single application (admin only)  
+router.get('/admin/:id', auth, async (req, res) => {
   try {
     const application = await Application.findById(req.params.id)
       .populate('jobId')
@@ -388,8 +401,8 @@ router.post('/', applicationValidation, validate, async (req, res) => {
   }
 });
 
-// PUT /api/applications/:id - Update application status (admin only)
-router.put('/:id', auth, async (req, res) => {
+// PUT /api/applications/admin/:id - Update application status (admin only)
+router.put('/admin/:id', auth, async (req, res) => {
   try {
     const { status, notes } = req.body;
     
@@ -480,8 +493,8 @@ router.put('/:id', auth, async (req, res) => {
   }
 });
 
-// DELETE /api/applications/:id - Delete application (admin only)
-router.delete('/:id', auth, async (req, res) => {
+// DELETE /api/applications/admin/:id - Delete application (admin only)
+router.delete('/admin/:id', auth, async (req, res) => {
   try {
     const application = await Application.findByIdAndDelete(req.params.id);
 
