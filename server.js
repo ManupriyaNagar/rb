@@ -18,8 +18,10 @@ const PORT = process.env.PORT || 5002;
 // Middleware
 
 const allowedOrigins = [
-  process.env.FRONTEND_URL || "https://rbshstudio.com",
-  "https://www.rbshstudio.com"
+  process.env.FRONTEND_URL || "http://localhost:3000",
+  "https://rbshstudio.com",
+  "https://www.rbshstudio.com",
+  "http://localhost:3000"
 ];
 
 app.use(cors({
